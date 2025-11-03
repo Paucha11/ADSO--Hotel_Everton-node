@@ -16,6 +16,7 @@ export const crearEmpleado = async (req, res) => {
     const {
       RUT_empleado,
       id_cargo,
+      NIT_hotel,
       nombre_empleado,
       telefono_empleado,
       direccion_empleado,
@@ -28,9 +29,9 @@ export const crearEmpleado = async (req, res) => {
 
     await pool.query(
       `INSERT INTO empleado 
-      (RUT_empleado, id_cargo, nombre_empleado, telefono_empleado, direccion_empleado, correo_electronico, fecha_nacimiento, EPS, salario, tipo_contrato) 
+      (RUT_empleado, id_cargo, NIT_hotel, nombre_empleado, telefono_empleado, direccion_empleado, correo_electronico, fecha_nacimiento, EPS, salario, tipo_contrato) 
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [RUT_empleado, id_cargo, nombre_empleado, telefono_empleado, direccion_empleado, correo_electronico, fecha_nacimiento, EPS, salario, tipo_contrato]
+      [RUT_empleado, id_cargo, NIT_hotelnombre_empleado, telefono_empleado, direccion_empleado, correo_electronico, fecha_nacimiento, EPS, salario, tipo_contrato]
     );
 
     res.json({ message: "Empleado creado correctamente" });
@@ -45,6 +46,7 @@ export const actualizarEmpleado = async (req, res) => {
     const { RUT_empleado } = req.params;
     const {
       id_cargo,
+      NIT_hotel,
       nombre_empleado,
       telefono_empleado,
       direccion_empleado,
@@ -58,8 +60,8 @@ export const actualizarEmpleado = async (req, res) => {
     await pool.query(
       `UPDATE empleado 
       SET id_cargo = ?, nombre_empleado = ?, telefono_empleado = ?, direccion_empleado = ?, correo_electronico = ?, fecha_nacimiento = ?, EPS = ?, salario = ?, tipo_contrato = ? 
-      WHERE RUT_empleado = ?`,
-      [id_cargo, nombre_empleado, telefono_empleado, direccion_empleado, correo_electronico, fecha_nacimiento, EPS, salario, tipo_contrato, RUT_empleado]
+      WHERE RUT_empleado = ?`, NIT_hotel
+      [id_cargo, NIT_hotel, nombre_empleado, telefono_empleado, direccion_empleado, correo_electronico, fecha_nacimiento, EPS, salario, tipo_contrato, RUT_empleado]
     );
 
     res.json({ message: "Empleado actualizado correctamente" });
