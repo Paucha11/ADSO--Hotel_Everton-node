@@ -2,14 +2,13 @@ import express from "express";
 import dotenv from "dotenv";
 import cors from "cors";
 import huespedRoutes from "./routes/huespedRoutes.js";
-<<<<<<< HEAD
+HEAD
 import empleadoRoutes from './routes/empleadoRoutes.js';
 git 
 
-=======
+
 import empleadoRoutes from "./routes/empleadoRoutes.js"; // 🔹 nuevo import
 import pool from "./config/db.js"; // 👈 importa la conexión
->>>>>>> d46340400ad6a8f889a90a6c7bc29498c1eecaa1
 
 dotenv.config();
 
@@ -24,9 +23,8 @@ app.use(express.json());
 
 // Rutas
 app.use("/api/huesped", huespedRoutes);
-<<<<<<< HEAD
+HEAD
 app.use('/api/empleado', empleadoRoutes);
-=======
 app.use("/api/empleados", empleadoRoutes); // 🔹 nueva línea
 
 // ✅ Probar conexión a la base de datos
@@ -39,7 +37,7 @@ app.use("/api/empleados", empleadoRoutes); // 🔹 nueva línea
   }
 })();
 
->>>>>>> d46340400ad6a8f889a90a6c7bc29498c1eecaa1
+
 
 // Puerto del servidor
 const PORT = process.env.PORT || 3000;
