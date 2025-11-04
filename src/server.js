@@ -2,32 +2,25 @@ import express from "express";
 import dotenv from "dotenv";
 import cors from "cors";
 import huespedRoutes from "./routes/huespedRoutes.js";
-HEAD
-import empleadoRoutes from './routes/empleadoRoutes.js';
-git 
-
-
-import empleadoRoutes from "./routes/empleadoRoutes.js"; // 🔹 nuevo import
-import pool from "./config/db.js"; // 👈 importa la conexión
+import empleadoRoutes from "./routes/empleadoRoutes.js";
+import pool from "./config/db.js";
 
 dotenv.config();
 
 const app = express();
 
 app.use(cors({
-  origin: "http://localhost:3001", // frontend
+  origin: "http://localhost:3001",
   methods: ["GET", "POST", "PUT", "DELETE"],
   credentials: true
 }));
 app.use(express.json());
 
-// Rutas
+// Rutas, solo UNA línea por endpoint
 app.use("/api/huesped", huespedRoutes);
-HEAD
-app.use('/api/empleado', empleadoRoutes);
-app.use("/api/empleados", empleadoRoutes); // 🔹 nueva línea
+app.use("/api/empleado", empleadoRoutes);
 
-// ✅ Probar conexión a la base de datos
+// Probar conexión a la base de datos
 (async () => {
   try {
     const [rows] = await pool.query("SELECT 1");
@@ -37,10 +30,8 @@ app.use("/api/empleados", empleadoRoutes); // 🔹 nueva línea
   }
 })();
 
-
-
 // Puerto del servidor
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
   console.log(`Servidor corriendo en http://localhost:${PORT}`);
 });
