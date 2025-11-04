@@ -8,10 +8,11 @@ import {
 
 const router = Router();
 
-// Rutas limpias y consistentes
+// Las rutas quedan relativas al prefijo /api/empleados
 router.get("/", obtenerEmpleado);
 router.post("/", crearEmpleado);
 router.put("/:RUT_empleado", actualizarEmpleado);
 router.delete("/:RUT_empleado", eliminarEmpleado);
 
 export default router;
+

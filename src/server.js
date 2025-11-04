@@ -17,7 +17,7 @@ app.use(cors({
 app.use(express.json());
 
 // Rutas
-app.use("/", huespedRoutes);
+app.use("/api/huesped", huespedRoutes);
 app.use("/api/empleados", empleadoRoutes); // 🔹 nueva línea
 
 // ✅ Probar conexión a la base de datos
