@@ -2,6 +2,9 @@ import express from "express";
 import dotenv from "dotenv";
 import cors from "cors";
 import huespedRoutes from "./routes/huespedRoutes.js";
+import empleadoRoutes from './routes/empleadoRoutes.js';
+
+
 
 dotenv.config();
 
@@ -11,7 +14,8 @@ app.use(cors());
 app.use(express.json());
 
 // Rutas
-app.use("/", huespedRoutes);
+app.use("/api/huesped", huespedRoutes);
+app.use('/api/empleado', empleadoRoutes);
 
 // Puerto del servidor
 const PORT = process.env.PORT || 3000;
