@@ -3,6 +3,7 @@ import dotenv from "dotenv";
 import cors from "cors";
 import huespedRoutes from "./routes/huespedRoutes.js";
 import empleadoRoutes from "./routes/empleadoRoutes.js"; // 🔹 nuevo import
+import pool from "./config/db.js"; // 👈 importa la conexión
 
 dotenv.config();
 
@@ -17,7 +18,18 @@ app.use(express.json());
 
 // Rutas
 app.use("/", huespedRoutes);
-app.use("/", empleadoRoutes); // 🔹 nueva línea
+app.use("/api/empleados", empleadoRoutes); // 🔹 nueva línea
+
+// ✅ Probar conexión a la base de datos
+(async () => {
+  try {
+    const [rows] = await pool.query("SELECT 1");
+    console.log("✅ Conexión a la base de datos exitosa");
+  } catch (error) {
+    console.error("❌ Error de conexión a la base de datos:", error.message);
+  }
+})();
+
 
 // Puerto del servidor
 const PORT = process.env.PORT || 3000;

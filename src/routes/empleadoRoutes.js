@@ -8,9 +8,10 @@ import {
 
 const router = Router();
 
-router.get("/empleado", obtenerEmpleado);
-router.post("/empleado", crearEmpleado);
-router.put("/empleado/:RUT_empleado", actualizarEmpleado);
-router.delete("/empleado/:RUT_empleado", eliminarEmpleado);
+// Rutas limpias y consistentes
+router.get("/", obtenerEmpleado);
+router.post("/", crearEmpleado);
+router.put("/:RUT_empleado", actualizarEmpleado);
+router.delete("/:RUT_empleado", eliminarEmpleado);
 
 export default router;
