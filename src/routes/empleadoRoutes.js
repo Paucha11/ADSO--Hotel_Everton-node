@@ -1,18 +1,18 @@
-import { Router } from "express";
-import { 
-  obtenerEmpleado, 
-  crearEmpleado, 
-  actualizarEmpleado, 
-  eliminarEmpleado 
-} from "../controllers/empleadocontrollers.js";
+import express from "express";
+import {
+  obtenerEmpleados,
+  agregarEmpleado,
+  eliminarEmpleado,
+  actualizarEmpleado
+} from "../controllers/empleadoController.js";
 
-const router = Router();
+const router = express.Router();
 
-// Las rutas quedan relativas al prefijo /api/empleados
-router.get("/", obtenerEmpleado);
-router.post("/", crearEmpleado);
-router.put("/:RUT_empleado", actualizarEmpleado);
+router.get("/", obtenerEmpleados);
+router.post("/", agregarEmpleado);
 router.delete("/:RUT_empleado", eliminarEmpleado);
+router.put("/:RUT_empleado", actualizarEmpleado);
 
 export default router;
+
 
