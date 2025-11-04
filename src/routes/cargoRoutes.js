@@ -1,9 +1,8 @@
 import { Router } from 'express';
-import { obtenerCargos, crearCargo } from '../controllers/cargoController.js';
+import { obtenerCargos } from '../controllers/cargocontrollers.js';
 
 const router = Router();
 
-router.get("/", obtenerCargos);
-router.post("/", crearCargo); // solo si quieres permitir creación desde frontend/admin
+router.get('/', obtenerCargos); // Ruta GET /api/cargo que responde con los cargos
 
 export default router;

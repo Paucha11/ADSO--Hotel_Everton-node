@@ -1,16 +1,25 @@
 import pool from "../config/db.js";
 
-// Obtener todos los cargos
+// Obtener todos los cargos (datos estáticos para prueba)
 export const obtenerCargos = async (req, res) => {
   try {
-    const [rows] = await pool.query("SELECT * FROM cargo");
-    res.json(rows);
+    // Datos estáticos simulando la tabla cargos
+    const cargos = [
+      { id_cargo: 1, cargo: 'Administrador' },
+      { id_cargo: 2, cargo: 'Conductor' },
+      { id_cargo: 3, cargo: 'Recepcionista' },
+      { id_cargo: 4, cargo: 'Supervisor' },
+      { id_cargo: 5, cargo: 'Aseo' },
+      { id_cargo: 6, cargo: 'Contador' }
+    ];
+
+    res.json(cargos);
   } catch (error) {
-    res.status(500).json({ error: "Error al obtener cargos", detalle: error.message });
+    res.status(500).json({ mensaje: 'Error obteniendo cargos', error });
   }
 };
 
-// (Opcional) Crear un cargo
+// Crear un cargo (para cuando tengas la tabla cargo preparada)
 export const crearCargo = async (req, res) => {
   try {
     const { cargo, salario, horas_laborales, tipo_contrato, horario } = req.body;
@@ -23,18 +32,3 @@ export const crearCargo = async (req, res) => {
     res.status(500).json({ error: "Error al crear cargo", detalle: error.message });
   }
 };
-
-// (Opcional) Actualizar un cargo
-export const actualizarCargo = async (req, res) => {
-  try {
-    const { id_cargo } = req.params;
-    const { cargo, salario, horas_laborales, tipo_contrato, horario } = req.body;
-    await pool.query(
-      "UPDATE cargo SET cargo = ?, salario = ?, horas_laborales = ?, tipo_contrato = ?, horario = ? WHERE id_cargo = ?",
-      [cargo, salario, horas_laborales, tipo_contrato, horario, id_cargo]
-    );
-    res.json({ message: "Cargo actualizado correctamente" });
-  } catch (error) {
-    res.status(500).json({ error: "Error al actualizar cargo", detalle: error.message });
-  }
-};;     
