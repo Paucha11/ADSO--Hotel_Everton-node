@@ -3,6 +3,7 @@ import dotenv from "dotenv";
 import cors from "cors";
 import huespedRoutes from "./routes/huespedRoutes.js";
 import empleadoRoutes from "./routes/empleadoRoutes.js";
+import cargoRoutes from "./routes/cargoRoutes.js";
 import pool from "./config/db.js";
 
 dotenv.config();
@@ -19,6 +20,7 @@ app.use(express.json());
 // Rutas, solo UNA línea por endpoint
 app.use("/api/huesped", huespedRoutes);
 app.use("/api/empleado", empleadoRoutes);
+app.use("/api/cargo", cargoRoutes);
 
 // Probar conexión a la base de datos
 (async () => {
