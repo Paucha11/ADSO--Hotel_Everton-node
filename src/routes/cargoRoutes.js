@@ -1,8 +1,12 @@
-import { Router } from 'express';
-import { obtenerCargos } from '../controllers/cargocontrollers.js';
+import { Router } from "express";
+import { obtenerCargos, crearCargo } from "../controllers/cargocontrollers.js";
+import { authenticate, authorize } from "../middleware/authMiddleware.js";
 
 const router = Router();
 
-router.get('/', obtenerCargos); // Ruta GET /api/cargo que responde con los cargos
+// Listado de cargos: admin o empleado
+router.get("/", authenticate, authorize("admin", "empleado"), obtenerCargos);
+// Crear cargo: solo admin
+router.post("/", authenticate, authorize("admin"), crearCargo);
 
 export default router;

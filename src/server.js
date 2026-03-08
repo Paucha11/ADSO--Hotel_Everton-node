@@ -4,29 +4,40 @@ import cors from "cors";
 import huespedRoutes from "./routes/huespedRoutes.js";
 import empleadoRoutes from "./routes/empleadoRoutes.js";
 import cargoRoutes from "./routes/cargoRoutes.js";
+import habitacionRoutes from "./routes/habitacionRoutes.js";
+import reservaRoutes from "./routes/reservaRoutes.js";
+import authRoutes from "./routes/authRoutes.js";
 import pool from "./config/db.js";
+import { seedAdminUser } from "./controllers/authController.js";
 
 dotenv.config();
 
 const app = express();
 
-app.use(cors({
-  origin: "http://localhost:3001",
-  methods: ["GET", "POST", "PUT", "DELETE"],
-  credentials: true
-}));
+// CORS para front local en 3001
+app.use(
+  cors({
+    origin: "http://localhost:3001",
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    credentials: true,
+  })
+);
 app.use(express.json());
 
-// Rutas, solo UNA línea por endpoint
+// Rutas principales
+app.use("/api/auth", authRoutes);
 app.use("/api/huesped", huespedRoutes);
 app.use("/api/empleado", empleadoRoutes);
 app.use("/api/cargo", cargoRoutes);
+app.use("/api/habitacion", habitacionRoutes);
+app.use("/api/reserva", reservaRoutes);
 
-// Probar conexión a la base de datos
+// Probar conexión y sembrar admin inicial
 (async () => {
   try {
-    const [rows] = await pool.query("SELECT 1");
+    await pool.query("SELECT 1");
     console.log("✅ Conexión a la base de datos exitosa");
+    await seedAdminUser();
   } catch (error) {
     console.error("❌ Error de conexión a la base de datos:", error.message);
   }
