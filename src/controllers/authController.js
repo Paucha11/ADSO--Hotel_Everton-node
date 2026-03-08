@@ -1,4 +1,4 @@
-// Controlador de autenticacion: login y registro, incluye admin por defecto
+// Controlador de autenticacion: login, registro y utilidades de sesión
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import pool from "../config/db.js";
@@ -115,4 +115,19 @@ export const seedAdminUser = async () => {
   } catch (error) {
     console.error("No se pudo crear el admin por defecto", error.message);
   }
+};
+
+// Devuelve los datos del usuario logueado usando el token
+export const me = async (req, res) => {
+  if (!req.user) return res.status(401).json({ message: "Token requerido" });
+  const { id_usuario } = req.user;
+  const [rows] = await pool.query(
+    `SELECT u.id_usuario, u.correo, r.nombre AS rol, u.RUT_empleado, u.id_huesped
+     FROM usuario u
+     JOIN rol r ON u.id_rol = r.id_rol
+     WHERE u.id_usuario = ?`,
+    [id_usuario]
+  );
+  if (!rows.length) return res.status(404).json({ message: "Usuario no encontrado" });
+  res.json(rows[0]);
 };

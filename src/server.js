@@ -7,6 +7,8 @@ import cargoRoutes from "./routes/cargoRoutes.js";
 import habitacionRoutes from "./routes/habitacionRoutes.js";
 import reservaRoutes from "./routes/reservaRoutes.js";
 import authRoutes from "./routes/authRoutes.js";
+import usuarioRoutes from "./routes/usuarioRoutes.js";
+import rolRoutes from "./routes/rolRoutes.js";
 import pool from "./config/db.js";
 import { seedAdminUser } from "./controllers/authController.js";
 
@@ -18,7 +20,7 @@ const app = express();
 app.use(
   cors({
     origin: "http://localhost:3001",
-    methods: ["GET", "POST", "PUT", "DELETE"],
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
     credentials: true,
   })
 );
@@ -26,6 +28,8 @@ app.use(express.json());
 
 // Rutas principales
 app.use("/api/auth", authRoutes);
+app.use("/api/usuario", usuarioRoutes);
+app.use("/api/rol", rolRoutes);
 app.use("/api/huesped", huespedRoutes);
 app.use("/api/empleado", empleadoRoutes);
 app.use("/api/cargo", cargoRoutes);

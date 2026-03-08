@@ -4,6 +4,7 @@ import {
   crearHabitacion,
   actualizarHabitacion,
   eliminarHabitacion,
+  habitacionesDisponibles,
 } from "../controllers/habitacionControllers.js";
 import { authenticate, authorize } from "../middleware/authMiddleware.js";
 
@@ -11,6 +12,8 @@ const router = Router();
 
 // Cualquier rol autenticado puede listar habitaciones
 router.get("/", authenticate, obtenerHabitaciones);
+// Consulta especial: disponibilidad por rango de fechas
+router.get("/disponibles", authenticate, habitacionesDisponibles);
 // Crear/editar habitaciones: admin o empleado
 router.post("/", authenticate, authorize("admin", "empleado"), crearHabitacion);
 router.put("/:id_habitacion", authenticate, authorize("admin", "empleado"), actualizarHabitacion);

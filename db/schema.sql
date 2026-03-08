@@ -62,7 +62,7 @@ CREATE TABLE IF NOT EXISTS reserva (
   fecha_reserva TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   fecha_entrada DATE NOT NULL,
   fecha_salida DATE NOT NULL,
-  estado ENUM('reservada','checkin','checkout','cancelada') DEFAULT 'reservada',
+  estado ENUM('reservada','confirmada','checkin','checkout','cancelada') DEFAULT 'reservada',
   total DECIMAL(10,2),
   notas TEXT,
   FOREIGN KEY (id_huesped) REFERENCES huesped(id_huesped),
