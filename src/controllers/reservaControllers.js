@@ -30,7 +30,6 @@ const buildReservaPayload = (body, fallback) => ({
   fecha_inicio: body.fecha_inicio ?? fallback.fecha_inicio,
   fecha_fin: body.fecha_fin ?? fallback.fecha_fin,
   estado: body.estado ?? fallback.estado,
-  notas: body.notas ?? fallback.notas,
 });
 
 const changeState = async (req, res, nuevoEstado) => {
@@ -78,7 +77,7 @@ export const obtenerReservas = async (req, res) => {
 
 export const crearReserva = async (req, res) => {
   try {
-    let { id_huesped, habitaciones = [], fecha_inicio, fecha_fin, estado = "no disponible", notas = null } = req.body;
+    let { id_huesped, habitaciones = [], fecha_inicio, fecha_fin, estado = "no disponible" } = req.body;
     if (!Array.isArray(habitaciones) || habitaciones.length === 0) {
       return res.status(400).json({ message: "habitaciones debe ser un array con al menos un id_habitacion" });
     }
@@ -104,8 +103,8 @@ export const crearReserva = async (req, res) => {
     }
 
     const [result] = await pool.query(
-      "INSERT INTO reserva (id_huesped, fecha_inicio, fecha_fin, estado, notas) VALUES (?, ?, ?, ?, ?)",
-      [id_huesped, fecha_inicio, fecha_fin, estado, notas]
+      "INSERT INTO reserva (id_huesped, fecha_inicio, fecha_fin, estado) VALUES (?, ?, ?, ?)",
+      [id_huesped, fecha_inicio, fecha_fin, estado]
     );
     const reservaId = result.insertId;
 
@@ -144,8 +143,8 @@ export const actualizarReserva = async (req, res) => {
     }
 
     await pool.query(
-      "UPDATE reserva SET fecha_inicio=?, fecha_fin=?, estado=?, notas=? WHERE id_reserva=?",
-      [payload.fecha_inicio, payload.fecha_fin, payload.estado, payload.notas, id_reserva]
+      "UPDATE reserva SET fecha_inicio=?, fecha_fin=?, estado=? WHERE id_reserva=?",
+      [payload.fecha_inicio, payload.fecha_fin, payload.estado, id_reserva]
     );
 
     if (habitaciones && habitaciones.length > 0) {

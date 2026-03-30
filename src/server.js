@@ -9,6 +9,7 @@ import reservaRoutes from "./routes/reservaRoutes.js";
 import authRoutes from "./routes/authRoutes.js";
 import usuarioRoutes from "./routes/usuarioRoutes.js";
 import rolRoutes from "./routes/rolRoutes.js";
+import hotelRoutes from "./routes/hotelRoutes.js";
 import pool from "./config/db.js";
 import { seedAdminUser } from "./controllers/authController.js";
 
@@ -30,6 +31,7 @@ app.use(express.json());
 app.use("/api/auth", authRoutes);
 app.use("/api/usuario", usuarioRoutes);
 app.use("/api/rol", rolRoutes);
+app.use("/api/hotel", hotelRoutes);
 app.use("/api/huesped", huespedRoutes);
 app.use("/api/empleado", empleadoRoutes);
 app.use("/api/cargo", cargoRoutes);
