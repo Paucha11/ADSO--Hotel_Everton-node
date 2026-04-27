@@ -8,7 +8,7 @@ const JWT_EXPIRES = process.env.JWT_EXPIRES || "8h";
 
 // Endpoint de login comun (admin, empleado, huesped)
 export const login = async (req, res) => {
-  const { correo, password } = req.body;
+  const { correo, password } = req.body || {};
   if (!correo || !password) {
     return res.status(400).json({ message: "Correo y contraseña son obligatorios" });
   }
@@ -60,7 +60,7 @@ export const login = async (req, res) => {
 
 // Solo un admin puede registrar nuevos usuarios con rol
 export const registrarUsuario = async (req, res) => {
-  const { correo, password, role, RUT_empleado = null, id_huesped = null } = req.body;
+  const { correo, password, role, RUT_empleado = null, id_huesped = null } = req.body || {};
 
   if (!correo || !password || !role) {
     return res.status(400).json({ message: "correo, password y role son obligatorios" });

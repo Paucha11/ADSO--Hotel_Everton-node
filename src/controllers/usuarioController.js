@@ -41,12 +41,24 @@ export const crearUsuario = async (req, res) => {
   const [exists] = await pool.query("SELECT id_usuario FROM usuario WHERE correo=?", [correo]);
   if (exists.length) return res.status(409).json({ message: "Correo ya existe" });
 
+  if (rol === "empleado") {
+    if (!RUT_empleado) return res.status(400).json({ message: "RUT_empleado es obligatorio para rol empleado" });
+    const [empleado] = await pool.query("SELECT RUT_empleado FROM empleado WHERE RUT_empleado=?", [RUT_empleado]);
+    if (!empleado.length) return res.status(400).json({ message: "El empleado indicado no existe" });
+  }
+
+  if (rol === "huesped") {
+    if (!id_huesped) return res.status(400).json({ message: "id_huesped es obligatorio para rol huesped" });
+    const [huesped] = await pool.query("SELECT id_huesped FROM huesped WHERE id_huesped=?", [id_huesped]);
+    if (!huesped.length) return res.status(400).json({ message: "El huésped indicado no existe" });
+  }
+
   const hash = await bcrypt.hash(password, 10);
-  await pool.query(
+  const [result] = await pool.query(
     "INSERT INTO usuario (correo, password_hash, id_rol, RUT_empleado, id_huesped) VALUES (?,?,?,?,?)",
     [correo, hash, roleId, rol === "empleado" ? RUT_empleado : null, rol === "huesped" ? id_huesped : null]
   );
-  res.status(201).json({ message: "Usuario creado" });
+  res.status(201).json({ message: "Usuario creado", id_usuario: result.insertId });
 };
 
 export const actualizarUsuario = async (req, res) => {

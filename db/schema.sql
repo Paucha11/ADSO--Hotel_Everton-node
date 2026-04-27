@@ -60,6 +60,7 @@ CREATE TABLE IF NOT EXISTS `habitacion` (
 
 CREATE TABLE IF NOT EXISTS `huesped` (
   `id_huesped` INT NOT NULL AUTO_INCREMENT,
+  `documento_identidad` VARCHAR(30) NULL DEFAULT NULL,
   `nombre_huesped` VARCHAR(100) NULL DEFAULT NULL,
   `fecha_nacimiento` DATE NULL DEFAULT NULL,
   `telefono` VARCHAR(20) NULL DEFAULT NULL,
@@ -67,7 +68,8 @@ CREATE TABLE IF NOT EXISTS `huesped` (
   `correo` VARCHAR(100) NULL DEFAULT NULL,
   `procedencia` VARCHAR(100) NULL DEFAULT NULL,
   `metodo_pagoFV` VARCHAR(50) NULL DEFAULT NULL,
-  PRIMARY KEY (`id_huesped`)
+  PRIMARY KEY (`id_huesped`),
+  UNIQUE KEY `documento_identidad_UNIQUE` (`documento_identidad`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci AUTO_INCREMENT=10000;
 
 CREATE TABLE IF NOT EXISTS `reserva` (

@@ -1,6 +1,29 @@
 // CRUD de habitaciones ajustado al esquema real (tipo_habitacion/capacidad) y disponibilidad via reservas
 import pool from "../config/db.js";
 
+export const seedDefaultRooms = async () => {
+  try {
+    const defaultRooms = [
+      [302, "900999111", "Sencilla", 120000, 1],
+      [304, "900999111", "Doble", 180000, 2],
+      [403, "900999111", "Multiple", 260000, 4],
+      [405, "900999111", "Doble", 190000, 2],
+      [407, "900999111", "Sencilla", 125000, 1],
+    ];
+
+    for (const [id, nit, tipo, precio, capacidad] of defaultRooms) {
+      await pool.query(
+        `INSERT INTO habitacion (id_habitacion, NIT_hotel, tipo_habitacion, precio, capacidad)
+         SELECT ?, ?, ?, ?, ?
+         WHERE NOT EXISTS (SELECT 1 FROM habitacion WHERE id_habitacion = ?)`,
+        [id, nit, tipo, precio, capacidad, id]
+      );
+    }
+  } catch (error) {
+    console.error("No se pudieron sembrar las habitaciones base", error.message);
+  }
+};
+
 export const obtenerHabitaciones = async (_req, res) => {
   try {
     const [rows] = await pool.query("SELECT * FROM habitacion");
@@ -38,11 +61,11 @@ export const habitacionesDisponibles = async (req, res) => {
 export const crearHabitacion = async (req, res) => {
   const { NIT_hotel = '900999111', tipo_habitacion, precio, capacidad } = req.body;
   try {
-    await pool.query(
+    const [result] = await pool.query(
       "INSERT INTO habitacion (NIT_hotel, tipo_habitacion, precio, capacidad) VALUES (?, ?, ?, ?)",
       [NIT_hotel, tipo_habitacion, precio, capacidad]
     );
-    res.status(201).json({ message: "Habitación creada" });
+    res.status(201).json({ message: "Habitación creada", id_habitacion: result.insertId });
   } catch (error) {
     res.status(500).json({ message: "Error al crear habitación", detalle: error.message });
   }

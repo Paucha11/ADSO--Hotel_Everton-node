@@ -14,7 +14,7 @@ export const obtenerHuesped = async (req, res) => {
 export const crearHuesped = async (req, res) => {
   try {
     const {
-      id_huesped,
+      documento_identidad,
       nombre_huesped,
       fecha_nacimiento,
       telefono,
@@ -23,13 +23,16 @@ export const crearHuesped = async (req, res) => {
       procedencia,
       metodo_pagoFV
     } = req.body;
-
-    await pool.query(
-      "INSERT INTO huesped (id_huesped, nombre_huesped, fecha_nacimiento, telefono, direccion, correo, procedencia, metodo_pagoFV) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-      [id_huesped, nombre_huesped, fecha_nacimiento, telefono, direccion, correo, procedencia, metodo_pagoFV]
+    const [result] = await pool.query(
+      "INSERT INTO huesped (documento_identidad, nombre_huesped, fecha_nacimiento, telefono, direccion, correo, procedencia, metodo_pagoFV) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+      [documento_identidad, nombre_huesped, fecha_nacimiento, telefono, direccion, correo, procedencia, metodo_pagoFV]
     );
 
-    res.json({ message: "Huésped creado correctamente" });
+    res.status(201).json({
+      message: "Huésped creado correctamente",
+      id_huesped: result.insertId,
+      documento_identidad,
+    });
   } catch (error) {
     res.status(500).json({ error: "Error al crear huésped", detalle: error.message });
   }
@@ -41,6 +44,7 @@ export const actualizarHuesped = async (req, res) => {
   try {
     const { id_huesped } = req.params;
     const {
+      documento_identidad,
       nombre_huesped,
       fecha_nacimiento,
       telefono,
@@ -51,8 +55,8 @@ export const actualizarHuesped = async (req, res) => {
     } = req.body;
 
     await pool.query(
-      "UPDATE huesped SET nombre_huesped = ?, fecha_nacimiento = ?, telefono = ?, direccion = ?, correo = ?, procedencia = ?, metodo_pagoFV = ? WHERE id_huesped = ?",
-      [nombre_huesped, fecha_nacimiento, telefono, direccion, correo, procedencia, metodo_pagoFV, id_huesped]
+      "UPDATE huesped SET documento_identidad = ?, nombre_huesped = ?, fecha_nacimiento = ?, telefono = ?, direccion = ?, correo = ?, procedencia = ?, metodo_pagoFV = ? WHERE id_huesped = ?",
+      [documento_identidad, nombre_huesped, fecha_nacimiento, telefono, direccion, correo, procedencia, metodo_pagoFV, id_huesped]
     );
 
     res.json({ message: "Huésped actualizado correctamente" });

@@ -3,6 +3,45 @@ import pool from "../config/db.js";
 // Estados permitidos según tu esquema (disponible / no disponible)
 const ESTADOS = ["disponible", "no disponible"];
 
+const resolverHuesped = async ({ id_huesped, documento_identidad, correo_huesped, nombre_huesped }) => {
+  if (id_huesped) {
+    const [rows] = await pool.query(
+      "SELECT id_huesped, nombre_huesped, documento_identidad, correo FROM huesped WHERE id_huesped=?",
+      [id_huesped]
+    );
+    return rows[0] || null;
+  }
+
+  if (documento_identidad) {
+    const [rows] = await pool.query(
+      "SELECT id_huesped, nombre_huesped, documento_identidad, correo FROM huesped WHERE documento_identidad=?",
+      [documento_identidad]
+    );
+    return rows[0] || null;
+  }
+
+  if (correo_huesped) {
+    const [rows] = await pool.query(
+      "SELECT id_huesped, nombre_huesped, documento_identidad, correo FROM huesped WHERE correo=?",
+      [correo_huesped]
+    );
+    return rows[0] || null;
+  }
+
+  if (nombre_huesped) {
+    const [rows] = await pool.query(
+      "SELECT id_huesped, nombre_huesped, documento_identidad, correo FROM huesped WHERE nombre_huesped=?",
+      [nombre_huesped]
+    );
+    if (rows.length > 1) {
+      throw new Error("Hay más de un huésped con ese nombre. Usa documento_identidad o correo.");
+    }
+    return rows[0] || null;
+  }
+
+  return null;
+};
+
 const validarFechas = (inicio, fin) => {
   const f1 = new Date(inicio);
   const f2 = new Date(fin);
@@ -58,8 +97,10 @@ const changeState = async (req, res, nuevoEstado) => {
 
 export const obtenerReservas = async (req, res) => {
   try {
-    let sql = `SELECT r.*, GROUP_CONCAT(rh.id_habitacion) AS habitaciones
+    let sql = `SELECT r.*, h.nombre_huesped, h.documento_identidad, h.correo,
+                      GROUP_CONCAT(rh.id_habitacion) AS habitaciones
                FROM reserva r
+               JOIN huesped h ON h.id_huesped = r.id_huesped
                LEFT JOIN reserva_habitacion rh ON rh.id_reserva = r.id_reserva`;
     const params = [];
     if (req.user?.role === "huesped") {
@@ -77,7 +118,16 @@ export const obtenerReservas = async (req, res) => {
 
 export const crearReserva = async (req, res) => {
   try {
-    let { id_huesped, habitaciones = [], fecha_inicio, fecha_fin, estado = "no disponible" } = req.body;
+    let {
+      id_huesped,
+      documento_identidad,
+      correo_huesped,
+      nombre_huesped,
+      habitaciones = [],
+      fecha_inicio,
+      fecha_fin,
+      estado = "no disponible"
+    } = req.body;
     if (!Array.isArray(habitaciones) || habitaciones.length === 0) {
       return res.status(400).json({ message: "habitaciones debe ser un array con al menos un id_habitacion" });
     }
@@ -88,16 +138,32 @@ export const crearReserva = async (req, res) => {
     }
 
     if (!id_huesped || !fecha_inicio || !fecha_fin) {
-      return res.status(400).json({ message: "id_huesped, fecha_inicio y fecha_fin son obligatorios" });
+      const huesped = await resolverHuesped({ id_huesped, documento_identidad, correo_huesped, nombre_huesped });
+      if (!huesped) {
+        return res.status(400).json({
+          message: "Debes enviar un huésped válido por id_huesped, documento_identidad, correo_huesped o nombre_huesped"
+        });
+      }
+      id_huesped = huesped.id_huesped;
     }
 
     if (!ESTADOS.includes(estado)) return res.status(400).json({ message: "Estado no válido" });
+
+    const huesped = await resolverHuesped({ id_huesped, documento_identidad, correo_huesped, nombre_huesped });
+    if (!huesped) {
+      return res.status(400).json({ message: "El huésped indicado no existe" });
+    }
+    id_huesped = huesped.id_huesped;
 
     const fechas = validarFechas(fecha_inicio, fecha_fin);
     if (!fechas.ok) return res.status(400).json({ message: fechas.message });
 
     // Validar disponibilidad de cada habitación
     for (const hab of habitaciones) {
+      const [habitacion] = await pool.query("SELECT id_habitacion FROM habitacion WHERE id_habitacion=?", [hab]);
+      if (!habitacion.length) {
+        return res.status(400).json({ message: `La habitación ${hab} no existe` });
+      }
       const libre = await habitacionDisponible(hab, fecha_inicio, fecha_fin);
       if (!libre) return res.status(400).json({ message: `La habitación ${hab} no está disponible en ese rango` });
     }
@@ -111,9 +177,20 @@ export const crearReserva = async (req, res) => {
     const values = habitaciones.map((h) => [reservaId, h]);
     await pool.query("INSERT INTO reserva_habitacion (id_reserva, id_habitacion) VALUES ?", [values]);
 
-    res.status(201).json({ message: "Reserva creada", id_reserva: reservaId });
+    res.status(201).json({
+      message: "Reserva creada",
+      id_reserva: reservaId,
+      huesped: {
+        id_huesped: huesped.id_huesped,
+        nombre_huesped: huesped.nombre_huesped,
+        documento_identidad: huesped.documento_identidad,
+        correo: huesped.correo,
+      },
+      habitaciones,
+    });
   } catch (error) {
-    res.status(500).json({ message: "Error al crear reserva", detalle: error.message });
+    const status = error.message.includes("Hay más de un huésped con ese nombre") ? 400 : 500;
+    res.status(status).json({ message: "Error al crear reserva", detalle: error.message });
   }
 };
 

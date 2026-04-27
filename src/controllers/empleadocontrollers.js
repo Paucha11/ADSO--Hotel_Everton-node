@@ -32,7 +32,7 @@ export const crearEmpleado = async (req, res) => {
       [RUT_empleado, id_cargo, NIT_hotel, nombre_empleado, telefono_empleado, direccion_empleado, correo_electronico, fecha_nacimiento, EPS, salario, tipo_contrato]
     );
 
-    res.json({ message: "Empleado creado correctamente" });
+    res.status(201).json({ message: "Empleado creado correctamente", RUT_empleado });
   } catch (error) {
     res.status(500).json({ error: "Error al crear empleado", detalle: error.message });
   }

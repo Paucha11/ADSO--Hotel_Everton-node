@@ -12,6 +12,7 @@ import rolRoutes from "./routes/rolRoutes.js";
 import hotelRoutes from "./routes/hotelRoutes.js";
 import pool from "./config/db.js";
 import { seedAdminUser } from "./controllers/authController.js";
+import { seedDefaultRooms } from "./controllers/habitacionControllers.js";
 
 dotenv.config();
 
@@ -44,6 +45,7 @@ app.use("/api/reserva", reservaRoutes);
     await pool.query("SELECT 1");
     console.log("✅ Conexión a la base de datos exitosa");
     await seedAdminUser();
+    await seedDefaultRooms();
   } catch (error) {
     console.error("❌ Error de conexión a la base de datos:", error.message);
   }
