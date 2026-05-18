@@ -1,6 +1,8 @@
 // CRUD de habitaciones ajustado al esquema real (tipo_habitacion/capacidad) y disponibilidad via reservas
 import pool from "../config/db.js";
 
+const ESTADOS_BLOQUEAN_HABITACION = ["pendiente", "confirmada", "checkin"];
+
 export const seedDefaultRooms = async () => {
   try {
     const defaultRooms = [
@@ -47,10 +49,10 @@ export const habitacionesDisponibles = async (req, res) => {
          SELECT 1 FROM reserva_habitacion rh
          JOIN reserva r ON r.id_reserva = rh.id_reserva
          WHERE rh.id_habitacion = h.id_habitacion
-           AND r.estado = 'no disponible'
+           AND r.estado IN (${ESTADOS_BLOQUEAN_HABITACION.map(() => "?").join(", ")})
            AND NOT (r.fecha_fin <= ? OR r.fecha_inicio >= ?)
        )`,
-      [desde, hasta]
+      [...ESTADOS_BLOQUEAN_HABITACION, desde, hasta]
     );
     res.json(rows);
   } catch (error) {

@@ -11,17 +11,27 @@ import usuarioRoutes from "./routes/usuarioRoutes.js";
 import rolRoutes from "./routes/rolRoutes.js";
 import hotelRoutes from "./routes/hotelRoutes.js";
 import pool from "./config/db.js";
-import { seedAdminUser } from "./controllers/authController.js";
+import { seedAdminUser, seedDemoUsers } from "./controllers/authController.js";
 import { seedDefaultRooms } from "./controllers/habitacionControllers.js";
 
 dotenv.config();
 
 const app = express();
 
+const allowedOrigins = new Set([
+  "http://localhost:3001",
+  "http://127.0.0.1:3001",
+]);
+
 // CORS para front local en 3001
 app.use(
   cors({
-    origin: "http://localhost:3001",
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.has(origin)) {
+        return callback(null, true);
+      }
+      return callback(new Error("Origen no permitido por CORS"));
+    },
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
     credentials: true,
   })
@@ -45,6 +55,7 @@ app.use("/api/reserva", reservaRoutes);
     await pool.query("SELECT 1");
     console.log("✅ Conexión a la base de datos exitosa");
     await seedAdminUser();
+    await seedDemoUsers();
     await seedDefaultRooms();
   } catch (error) {
     console.error("❌ Error de conexión a la base de datos:", error.message);

@@ -1,7 +1,14 @@
 import pool from "../config/db.js";
 
-// Estados permitidos según tu esquema (disponible / no disponible)
-const ESTADOS = ["disponible", "no disponible"];
+const ESTADOS = ["pendiente", "confirmada", "checkin", "checkout", "cancelada"];
+const ESTADOS_BLOQUEAN_HABITACION = ["pendiente", "confirmada", "checkin"];
+const TRANSICIONES_ESTADO = {
+  pendiente: ["confirmada", "cancelada"],
+  confirmada: ["checkin", "cancelada"],
+  checkin: ["checkout"],
+  checkout: [],
+  cancelada: [],
+};
 
 const resolverHuesped = async ({ id_huesped, documento_identidad, correo_huesped, nombre_huesped }) => {
   if (id_huesped) {
@@ -51,11 +58,11 @@ const validarFechas = (inicio, fin) => {
 };
 
 const habitacionDisponible = async (id_habitacion, desde, hasta, excluirId = null) => {
-  const params = [id_habitacion, desde, hasta];
+  const params = [id_habitacion, ...ESTADOS_BLOQUEAN_HABITACION, desde, hasta];
   let sql = `SELECT 1 FROM reserva_habitacion rh
              JOIN reserva r ON r.id_reserva = rh.id_reserva
              WHERE rh.id_habitacion = ?
-               AND r.estado = 'no disponible'
+               AND r.estado IN (${ESTADOS_BLOQUEAN_HABITACION.map(() => "?").join(", ")})
                AND NOT (r.fecha_fin <= ? OR r.fecha_inicio >= ?)`;
   if (excluirId) {
     sql += " AND r.id_reserva <> ?";
@@ -71,6 +78,9 @@ const buildReservaPayload = (body, fallback) => ({
   estado: body.estado ?? fallback.estado,
 });
 
+const puedeCambiarEstado = (estadoActual, nuevoEstado) =>
+  (TRANSICIONES_ESTADO[estadoActual] || []).includes(nuevoEstado);
+
 const changeState = async (req, res, nuevoEstado) => {
   const { id_reserva } = req.params;
   try {
@@ -83,15 +93,58 @@ const changeState = async (req, res, nuevoEstado) => {
       return res.status(403).json({ message: "Solo puedes modificar tus propias reservas" });
     }
 
-    // Huesped solo puede pasar a disponible (cancelar)
-    if (req.user?.role === "huesped" && nuevoEstado !== "disponible") {
+    if (req.user?.role === "huesped" && nuevoEstado !== "cancelada") {
       return res.status(403).json({ message: "No puedes cambiar a ese estado" });
+    }
+
+    if (!puedeCambiarEstado(reserva.estado, nuevoEstado)) {
+      return res.status(400).json({
+        message: `La reserva no puede pasar de ${reserva.estado} a ${nuevoEstado}`,
+      });
     }
 
     await pool.query("UPDATE reserva SET estado=? WHERE id_reserva=?", [nuevoEstado, id_reserva]);
     res.json({ message: `Estado de reserva actualizado a ${nuevoEstado}` });
   } catch (error) {
     res.status(500).json({ message: "Error al cambiar estado", detalle: error.message });
+  }
+};
+
+export const obtenerDisponibilidad = async (req, res) => {
+  const { fecha_inicio, fecha_fin } = req.query;
+
+  const fechas = validarFechas(fecha_inicio, fecha_fin);
+  if (!fechas.ok) {
+    return res.status(400).json({ message: fechas.message });
+  }
+
+  try {
+    const [habitaciones] = await pool.query(
+      `SELECT h.id_habitacion, h.NIT_hotel, h.tipo_habitacion, h.precio, h.capacidad,
+              CASE
+                WHEN EXISTS (
+                  SELECT 1
+                  FROM reserva_habitacion rh
+                  JOIN reserva r ON r.id_reserva = rh.id_reserva
+                  WHERE rh.id_habitacion = h.id_habitacion
+                    AND r.estado IN (${ESTADOS_BLOQUEAN_HABITACION.map(() => "?").join(", ")})
+                    AND NOT (r.fecha_fin <= ? OR r.fecha_inicio >= ?)
+                )
+                THEN 'no disponible'
+                ELSE 'disponible'
+              END AS disponibilidad
+       FROM habitacion h
+       ORDER BY h.id_habitacion`,
+      [...ESTADOS_BLOQUEAN_HABITACION, fecha_inicio, fecha_fin]
+    );
+
+    res.json({
+      fecha_inicio,
+      fecha_fin,
+      habitaciones,
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Error al consultar disponibilidad", detalle: error.message });
   }
 };
 
@@ -126,7 +179,8 @@ export const crearReserva = async (req, res) => {
       habitaciones = [],
       fecha_inicio,
       fecha_fin,
-      estado = "no disponible"
+      metodo_pagoFV,
+      estado = "pendiente"
     } = req.body;
     if (!Array.isArray(habitaciones) || habitaciones.length === 0) {
       return res.status(400).json({ message: "habitaciones debe ser un array con al menos un id_habitacion" });
@@ -134,7 +188,7 @@ export const crearReserva = async (req, res) => {
 
     if (req.user?.role === "huesped") {
       id_huesped = req.user.id_huesped;
-      estado = "no disponible"; // huésped crea reservas activas
+      estado = "pendiente";
     }
 
     if (!id_huesped || !fecha_inicio || !fecha_fin) {
@@ -174,6 +228,10 @@ export const crearReserva = async (req, res) => {
     );
     const reservaId = result.insertId;
 
+    if (metodo_pagoFV) {
+      await pool.query("UPDATE huesped SET metodo_pagoFV = ? WHERE id_huesped = ?", [metodo_pagoFV, id_huesped]);
+    }
+
     const values = habitaciones.map((h) => [reservaId, h]);
     await pool.query("INSERT INTO reserva_habitacion (id_reserva, id_habitacion) VALUES ?", [values]);
 
@@ -206,7 +264,13 @@ export const actualizarReserva = async (req, res) => {
     }
 
     const payload = buildReservaPayload(req.body, actual);
+    const metodo_pagoFV = req.body.metodo_pagoFV;
     if (!ESTADOS.includes(payload.estado)) return res.status(400).json({ message: "Estado no válido" });
+    if (payload.estado !== actual.estado && !puedeCambiarEstado(actual.estado, payload.estado)) {
+      return res.status(400).json({
+        message: `La reserva no puede pasar de ${actual.estado} a ${payload.estado}`,
+      });
+    }
 
     const fechas = validarFechas(payload.fecha_inicio, payload.fecha_fin);
     if (!fechas.ok) return res.status(400).json({ message: fechas.message });
@@ -223,6 +287,10 @@ export const actualizarReserva = async (req, res) => {
       "UPDATE reserva SET fecha_inicio=?, fecha_fin=?, estado=? WHERE id_reserva=?",
       [payload.fecha_inicio, payload.fecha_fin, payload.estado, id_reserva]
     );
+
+    if (metodo_pagoFV) {
+      await pool.query("UPDATE huesped SET metodo_pagoFV = ? WHERE id_huesped = ?", [metodo_pagoFV, actual.id_huesped]);
+    }
 
     if (habitaciones && habitaciones.length > 0) {
       await pool.query("DELETE FROM reserva_habitacion WHERE id_reserva=?", [id_reserva]);
@@ -247,8 +315,7 @@ export const eliminarReserva = async (req, res) => {
   }
 };
 
-// Acciones de negocio explicitas (disponible/no disponible)
-export const confirmarReserva = async (req, res) => changeState(req, res, "no disponible");
-export const cancelarReserva = async (req, res) => changeState(req, res, "disponible");
-export const checkinReserva = async (req, res) => changeState(req, res, "no disponible");
-export const checkoutReserva = async (req, res) => changeState(req, res, "disponible");
+export const confirmarReserva = async (req, res) => changeState(req, res, "confirmada");
+export const cancelarReserva = async (req, res) => changeState(req, res, "cancelada");
+export const checkinReserva = async (req, res) => changeState(req, res, "checkin");
+export const checkoutReserva = async (req, res) => changeState(req, res, "checkout");

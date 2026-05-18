@@ -129,7 +129,7 @@ CREATE TABLE IF NOT EXISTS `hotel_everton`.`reserva` (
   `id_huesped` INT NULL DEFAULT NULL,
   `fecha_inicio` DATE NULL DEFAULT NULL,
   `fecha_fin` DATE NULL DEFAULT NULL,
-  `estado` ENUM('disponible', 'no disponible') NULL DEFAULT NULL,
+  `estado` ENUM('pendiente', 'confirmada', 'checkin', 'checkout', 'cancelada') NULL DEFAULT 'pendiente',
   PRIMARY KEY (`id_reserva`),
   INDEX `id_huesped` (`id_huesped` ASC) VISIBLE,
   CONSTRAINT `reserva_ibfk_1`

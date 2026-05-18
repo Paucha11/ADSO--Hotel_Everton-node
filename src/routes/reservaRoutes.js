@@ -1,5 +1,6 @@
 import { Router } from "express";
 import {
+  obtenerDisponibilidad,
   obtenerReservas,
   crearReserva,
   actualizarReserva,
@@ -13,7 +14,10 @@ import { authenticate, authorize } from "../middleware/authMiddleware.js";
 
 const router = Router();
 
-// Todas las reservas requieren usuario autenticado
+// Consulta publica de disponibilidad para el flujo de reserva del sitio
+router.get("/disponibilidad", obtenerDisponibilidad);
+
+// Todas las demas rutas requieren usuario autenticado
 router.use(authenticate);
 
 router.get("/", obtenerReservas);

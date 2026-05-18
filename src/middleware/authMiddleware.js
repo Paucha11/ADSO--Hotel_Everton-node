@@ -1,6 +1,13 @@
+import dotenv from "dotenv";
 import jwt from "jsonwebtoken";
 
-const JWT_SECRET = process.env.JWT_SECRET || "change-me";
+dotenv.config();
+
+const JWT_SECRET = process.env.JWT_SECRET;
+
+if (!JWT_SECRET) {
+  throw new Error("JWT_SECRET es obligatorio en el archivo .env");
+}
 
 // Valida que el token JWT exista y sea correcto; adjunta el usuario al request
 export const authenticate = (req, res, next) => {
